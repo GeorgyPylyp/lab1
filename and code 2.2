@@ -1,0 +1,81 @@
+package com.example.myapplication2;
+
+
+import android.os.Bundle;
+import android.widget.Button;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import androidx.appcompat.app.AppCompatActivity;
+
+import java.util.ArrayList;
+import java.util.Random;
+
+public class MainActivity extends AppCompatActivity {
+
+    TextView tvQuestion, tvScore;
+    Button btnTrue, btnFalse;
+
+    String[] questions = {
+            "Микола Лисенко вважається засновником української класичної музики.",
+            "Кобзарство виникло у XX столітті.",
+            "Опера «Запорожець за Дунаєм» написана Семеном Гулаком-Артемовським.",
+            "Леонтович є автором «Щедрика».",
+            "Бандура — духовий музичний інструмент."
+    };
+
+    boolean[] answers = {
+            true, false, true, true, false
+    };
+
+    ArrayList<Integer> usedQuestions = new ArrayList<>();
+    Random random = new Random();
+
+    int score = 0;
+    int currentIndex;
+
+    boolean withoutRepeats = true; // 🔁 змінюй на false — з повтореннями
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        tvQuestion = findViewById(R.id.tvQuestion);
+        tvScore = findViewById(R.id.tvScore);
+        btnTrue = findViewById(R.id.btnTrue);
+        btnFalse = findViewById(R.id.btnFalse);
+
+        showQuestion();
+
+        btnTrue.setOnClickListener(v -> checkAnswer(true));
+        btnFalse.setOnClickListener(v -> checkAnswer(false));
+    }
+
+    void showQuestion() {
+        if (withoutRepeats && usedQuestions.size() == questions.length) {
+            Toast.makeText(this,
+                    "Гру завершено! Результат: " + score,
+                    Toast.LENGTH_LONG).show();
+            btnTrue.setEnabled(false);
+            btnFalse.setEnabled(false);
+            return;
+        }
+
+        do {
+            currentIndex = random.nextInt(questions.length);
+        } while (withoutRepeats && usedQuestions.contains(currentIndex));
+
+        usedQuestions.add(currentIndex);
+        tvQuestion.setText(questions[currentIndex]);
+    }
+
+    void checkAnswer(boolean userAnswer) {
+        if (userAnswer == answers[currentIndex]) {
+            score++;
+        }
+
+        tvScore.setText("Score: " + score);
+        showQuestion();
+    }
+}
