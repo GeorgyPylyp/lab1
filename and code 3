@@ -1,0 +1,202 @@
+package com.example.myapplication3;
+
+import android.os.Bundle;
+import android.os.CountDownTimer;
+import android.widget.Button;
+import android.widget.CheckBox;
+import android.widget.ProgressBar;
+import android.widget.RadioGroup;
+import android.widget.TextView;
+import android.widget.Toast;
+import android.widget.ToggleButton;
+
+import androidx.appcompat.app.AppCompatActivity;
+
+import java.util.ArrayList;
+import java.util.Random;
+
+public class MainActivity extends AppCompatActivity {
+
+    TextView tvQuestion, tvScore, tvTimer;
+    Button btnTrue, btnFalse, btnRestart;
+    CheckBox cbNoRepeat;
+    ToggleButton toggleTimer;
+    RadioGroup rgDifficulty;
+    ProgressBar progressBar;
+
+    String[] questions = {
+            "Микола Лисенко є засновником української класичної музики.",
+            "Кобзарство виникло у XX столітті.",
+            "Оперу «Запорожець за Дунаєм» написав Семен Гулак-Артемовський.",
+            "Микола Леонтович є автором «Щедрика».",
+            "Бандура належить до духових інструментів.",
+            "Тарас Шевченко написав «Кобзар».",
+            "Українська народна пісня «Несе Галя воду» є жартівливою.",
+            "Леся Українка була поетесою і драматургом.",
+            "Гімн України написав Михайло Вербицький.",
+            "Іван Франко був лише поетом."
+    };
+
+    boolean[] answers = {
+            true,
+            false,
+            true,
+            true,
+            false,
+            true,
+            true,
+            true,
+            true,
+            false
+    };
+
+    Random random = new Random();
+    ArrayList<Integer> usedQuestions = new ArrayList<>();
+
+    int score = 0;
+    int asked = 0;
+    int maxQuestions = 5;
+    int currentIndex;
+
+    boolean gameActive = true;
+    CountDownTimer timer;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        tvQuestion = findViewById(R.id.tvQuestion);
+        tvScore = findViewById(R.id.tvScore);
+        tvTimer = findViewById(R.id.tvTimer);
+
+        btnTrue = findViewById(R.id.btnTrue);
+        btnFalse = findViewById(R.id.btnFalse);
+        btnRestart = findViewById(R.id.btnRestart);
+
+        cbNoRepeat = findViewById(R.id.cbNoRepeat);
+        toggleTimer = findViewById(R.id.toggleTimer);
+        rgDifficulty = findViewById(R.id.rgDifficulty);
+        progressBar = findViewById(R.id.progressBar);
+
+        btnTrue.setOnClickListener(v -> checkAnswer(true));
+        btnFalse.setOnClickListener(v -> checkAnswer(false));
+        btnRestart.setOnClickListener(v -> resetGame());
+
+        toggleTimer.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            if (isChecked) startTimer();
+            else stopTimer();
+        });
+
+        // 🔥 ГОЛОВНЕ: при зміні складності гра починається заново
+        rgDifficulty.setOnCheckedChangeListener((group, checkedId) -> {
+            resetGame();
+        });
+
+        resetGame();
+    }
+
+    void resetGame() {
+        stopTimer();
+
+        score = 0;
+        asked = 0;
+        gameActive = true;
+        usedQuestions.clear();
+
+        if (rgDifficulty.getCheckedRadioButtonId() == R.id.rbHard) {
+            maxQuestions = 10;
+        } else {
+            maxQuestions = 5;
+        }
+
+        tvScore.setText("Score: 0");
+        tvTimer.setText("");
+        progressBar.setMax(maxQuestions);
+        progressBar.setProgress(0);
+
+        btnTrue.setEnabled(true);
+        btnFalse.setEnabled(true);
+
+        if (toggleTimer.isChecked()) {
+            startTimer();
+        }
+
+        showQuestion();
+    }
+
+    void showQuestion() {
+        if (!gameActive) return;
+
+        if (asked == maxQuestions) {
+            endGame();
+            return;
+        }
+
+        do {
+            currentIndex = random.nextInt(questions.length);
+        } while (cbNoRepeat.isChecked() && usedQuestions.contains(currentIndex));
+
+        usedQuestions.add(currentIndex);
+        tvQuestion.setText(questions[currentIndex]);
+    }
+
+    void checkAnswer(boolean userAnswer) {
+        if (!gameActive) return;
+
+        if (userAnswer == answers[currentIndex]) {
+            score++;
+        }
+
+        asked++;
+        tvScore.setText("Score: " + score);
+        progressBar.setProgress(asked);
+
+        showQuestion();
+    }
+
+    void startTimer() {
+        stopTimer();
+
+        int time;
+        if (rgDifficulty.getCheckedRadioButtonId() == R.id.rbHard) {
+            time = 30000; // 30 сек
+        } else {
+            time = 60000; // 60 сек
+        }
+
+        timer = new CountDownTimer(time, 1000) {
+            @Override
+            public void onTick(long millisUntilFinished) {
+                tvTimer.setText("Time: " + millisUntilFinished / 1000 + "s");
+            }
+
+            @Override
+            public void onFinish() {
+                tvTimer.setText("Time over");
+                endGame();
+            }
+        }.start();
+    }
+
+    void stopTimer() {
+        if (timer != null) {
+            timer.cancel();
+            timer = null;
+        }
+        tvTimer.setText("");
+    }
+
+    void endGame() {
+        gameActive = false;
+        btnTrue.setEnabled(false);
+        btnFalse.setEnabled(false);
+        stopTimer();
+
+        Toast.makeText(
+                this,
+                "Гру завершено! Результат: " + score + " з " + maxQuestions,
+                Toast.LENGTH_LONG
+        ).show();
+    }
+}
