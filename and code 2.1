@@ -1,0 +1,91 @@
+package com.example.myapplication;
+
+import static com.example.myapplication.R.id.tvColor;
+
+import android.graphics.Color;
+import android.os.Bundle;
+import android.os.CountDownTimer;
+import android.view.View;
+import android.widget.Button;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import androidx.appcompat.app.AppCompatActivity;
+
+import java.util.Random;
+
+public class MainActivity extends AppCompatActivity {
+
+    TextView tvColor, tvScore;
+    Button btnTrue, btnFalse;
+
+    String[] colorNames = {"RED", "GREEN", "BLUE", "YELLOW"};
+    int[] colorValues = {Color.RED, Color.GREEN, Color.BLUE, Color.YELLOW};
+
+    int score = 0;
+    int textColorIndex;
+    int textNameIndex;
+
+    boolean isGameActive = true;
+
+    Random random = new Random();
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        tvColor = findViewById(R.id.tvColor);
+        tvScore = findViewById(R.id.tvScore);
+        btnTrue = findViewById(R.id.btnTrue);
+        btnFalse = findViewById(R.id.btnFalse);
+
+        generateColor();
+
+        btnTrue.setOnClickListener(v -> checkAnswer(true));
+        btnFalse.setOnClickListener(v -> checkAnswer(false));
+
+        startTimer();
+    }
+
+    void generateColor() {
+        textNameIndex = random.nextInt(colorNames.length);
+        textColorIndex = random.nextInt(colorValues.length);
+
+        tvColor.setText(colorNames[textNameIndex]);
+        tvColor.setTextColor(colorValues[textColorIndex]);
+    }
+
+    void checkAnswer(boolean userAnswer) {
+        if (!isGameActive) return;
+
+        boolean isCorrect = (textNameIndex == textColorIndex);
+
+        if (userAnswer == isCorrect) {
+            score++;
+        }
+
+        tvScore.setText("Score: " + score);
+        generateColor();
+    }
+
+    void startTimer() {
+        new CountDownTimer(18000, 1000) { // 3 хв
+            @Override
+            public void onTick(long millisUntilFinished) {
+            }
+
+            @Override
+            public void onFinish() {
+                isGameActive = false;
+
+                btnTrue.setEnabled(false);
+                btnFalse.setEnabled(false);
+
+                Toast.makeText(MainActivity.this,
+                        "Time over! Result: " + score,
+                        Toast.LENGTH_LONG).show();
+            }
+        }.start();
+    }
+    }
